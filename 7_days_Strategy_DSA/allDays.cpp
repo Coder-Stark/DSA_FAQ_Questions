@@ -2541,27 +2541,617 @@ For 0 to 3 minimum distance will be 10. By following path 0 -> 2 -> 3
 For 0 to 4 minimum distance will be 10. By following path 0 -> 1 -> 4
 
 
+/*DYANAMIC PROGRAMMING **************************************/
+//63. SUBSET SUM                //{T.C = O(N*SUM), S.C = O(N*SUM)}
+
+Given an array of positive integers arr[] and a value sum, 
+determine if there is a subset of arr[] with sum equal to 
+given sum. 
+
+class Solution {
+  public:
+    int dp[205][10005];
+    bool solveMem(vector<int>&arr, int targetSum, int i){
+        int n = arr.size();
+        //base case
+        if(targetSum == 0) return true;                 //dont pick anything
+        if(i >= n || targetSum < 0) return false;       //should below above condition always
+        
+        if(dp[i][targetSum] != -1) return dp[i][targetSum];
+        
+        bool incl = solveMem(arr, targetSum-arr[i], i+1);   //include -> subract from target sum
+        bool excl = solveMem(arr, targetSum, i+1);
+        
+        return dp[i][targetSum] = incl || excl;
+    }
+    bool isSubsetSum(vector<int>& arr, int sum) {
+        memset(dp, -1, sizeof(dp));
+        return solveMem(arr, sum, 0);              //0 -> initial index
+        
+    }
+};
+
+Input: arr[] = [3, 34, 4, 12, 5, 2], sum = 9
+Output: true 
+Explanation: Here there exists a subset with target sum = 9, 4+3+2 = 9.
+
+Input: arr[] = [3, 34, 4, 12, 5, 2], sum = 30
+Output: false
+Explanation: There is no subset with target sum 30.
+
+Input: arr[] = [1, 2, 3], sum = 6
+Output: true
+Explanation: The entire array can be taken as a subset, giving 1 + 2 + 3 = 6.
 
 
+//64. PARTITION EQUAL SUBSET SUM  //{T.C = O(N*SUM), S.C = O(N*SUM)}
+
+Given an integer array nums, return true if you can partition 
+the array into two subsets such that the sum of the elements 
+in both subsets is equal or false otherwise.
+
+class Solution {
+public:
+    int dp[205][20005];                         //200*100 => 20000
+    bool solveMem(vector<int>&nums, int targetSum, int i){
+        int n = nums.size();
+        //base case
+        if(targetSum == 0) return true;           //dont pick any 
+        if(i >= n || targetSum < 0) return false;  //invalid condition
+
+        if(dp[i][targetSum] != -1) return dp[i][targetSum];
+
+        bool incl = solveMem(nums, targetSum-nums[i], i+1);
+        bool excl = solveMem(nums, targetSum, i+1);
+
+        return dp[i][targetSum] = incl || excl;
+    }
+    bool canPartition(vector<int>& nums) {
+        int totalSum = 0;
+        for(auto it : nums) totalSum += it;
+
+        //base case
+        if(totalSum % 2 != 0) return false;       //odd sum can't be divide
+
+        memset(dp, -1, sizeof(dp));
+        int targetSum = totalSum / 2;
+        return solveMem(nums, targetSum, 0);       //0 = initial index
+    }
+};
+
+Example 1:
+Input: nums = [1,5,11,5]
+Output: true
+Explanation: The array can be partitioned as [1, 5, 5] and [11].
+
+Example 2:
+Input: nums = [1,2,3,5]
+Output: false
+Explanation: The array cannot be partitioned into equal sum subsets.
 
 
+//65. COIN CHANGE 1        //{T.C = O(N*AMOUNT), S.C = O(N*AMOUNT)}
+
+You are given an integer array coins representing coins of 
+different denominations and an integer amount representing a 
+total amount of money.
+
+Return the fewest number of coins that you need to make up 
+that amount. If that amount of money cannot be made up by 
+any combination of the coins, return -1.
+
+You may assume that you have an infinite number of each kind 
+of coin.
+
+class Solution {
+public:
+    int dp[15][10005];                         //no. of coins, amount
+    int solveMem(vector<int>&coins, int targetSum, int i){
+        int  n = coins.size();
+        //base case
+        if(targetSum == 0) return 0;            //dont pickup any
+        if(i >= n || targetSum < 0) return INT_MAX;  //invalid case
+
+        if(dp[i][targetSum] != -1) return dp[i][targetSum];
+
+        int inclCoinCount = INT_MAX;                    //find minimum (initialize max)
+        if(targetSum >= coins[i]){
+            int remainingCoinCount = solveMem(coins, targetSum-coins[i], i);  //1 coin can use multiple time
+            if(remainingCoinCount != INT_MAX) inclCoinCount = 1 + remainingCoinCount;   //1(current coin) + val (prev no. of used coins)
+        }
+        int exclCoinCount = 0 + solveMem(coins, targetSum, i+1);
+
+        return dp[i][targetSum] = min(inclCoinCount, exclCoinCount);
+    }
+    int coinChange(vector<int>& coins, int amount) {
+        memset(dp, -1, sizeof(dp));
+        int ans = solveMem(coins, amount, 0);         //0 = initial index
+        return ans == INT_MAX ? -1 : ans;
+    }
+};
+
+Example 1:
+Input: coins = [1,2,5], amount = 11
+Output: 3
+Explanation: 11 = 5 + 5 + 1
+
+Example 2:
+Input: coins = [2], amount = 3
+Output: -1
+
+Example 3:
+Input: coins = [1], amount = 0
+Output: 0
 
 
+//COIN CHANGE 2         //{T.C = O(N*AMOUNT), S.C = O(N*AMOUNT)}
+//different from above (base case and if condition)
+
+You are given an integer array coins representing coins of 
+different denominations and an integer amount representing a 
+total amount of money.
+
+Return the number of combinations that make up that amount. 
+If that amount of money cannot be made up by any combination 
+of the coins, return 0.
+
+You may assume that you have an infinite number of each kind 
+of coin.
+
+The final answer is guaranteed to fit into a signed 32-bit 
+integer.
+
+class Solution {
+public:
+    int dp[305][5005];                          //no. of coins, amount
+    int solveMem(vector<int>&coins, int targetSum, int i){
+        int n = coins.size();
+        //base case
+        if(targetSum == 0) return 1;           //found 1 way
+        if(i >= n ) return 0;  //invalid case
+
+        if(dp[i][targetSum] != -1) return dp[i][targetSum];
+
+        int inclCoinCount = 0;
+        if(targetSum >= coins[i]){
+            inclCoinCount = solveMem(coins, targetSum-coins[i], i); //infinite supply of coins
+        }
+        int exclCoinCount = 0 + solveMem(coins, targetSum, i+1);
+
+        return dp[i][targetSum] = inclCoinCount + exclCoinCount;    //for find total ways
+    }
+    int change(int amount, vector<int>& coins) {
+        memset(dp, -1, sizeof(dp));
+        return solveMem(coins, amount, 0);     //0 = initial index
+    }
+};
+
+Example 1:
+Input: amount = 5, coins = [1,2,5]
+Output: 4
+Explanation: there are four ways to make up the amount:
+5=5
+5=2+2+1
+5=2+1+1+1
+5=1+1+1+1+1
+
+Example 2:
+Input: amount = 3, coins = [2]
+Output: 0
+Explanation: the amount of 3 cannot be made up just with coins of 2.
+
+Example 3:
+Input: amount = 10, coins = [10]
+Output: 1
 
 
+//67. UNIQUE PATHS           {T.C = O(N*M), S.C = O(N*M)}
+
+There is a robot on an m x n grid. The robot is initially 
+located at the top-left corner (i.e., grid[0][0]). The robot 
+tries to move to the bottom-right corner (i.e., grid[m - 1][n - 1]). 
+The robot can only move either down or right at any point in time.
+
+Given the two integers m and n, return the number of possible 
+unique paths that the robot can take to reach the bottom-right 
+corner.
+
+The test cases are generated so that the answer will be less 
+than or equal to 2 * 109.
+
+class Solution {
+public:
+    int dp[105][105];
+    int solveMem(int i, int j, int n, int m){
+        //base case
+        if(i >= n || j >= m) return 0;       //invalid case (no way)
+        if(i == n-1 && j == m-1) return 1;   //start == dest (1 way)
+
+        if(dp[i][j] != -1) return dp[i][j];
+
+        int down  = solveMem(i, j+1, n, m);
+        int right = solveMem(i+1, j, n, m);
+
+        return dp[i][j] = down + right;     //total ways
+    }
+    int uniquePaths(int m, int n) {
+        memset(dp, -1, sizeof(dp));
+        return solveMem(0, 0, n, m);            //0 = initial index
+    }
+};
+
+Example 1:
+Input: m = 3, n = 7
+Output: 28
+
+Example 2:
+Input: m = 3, n = 2
+Output: 3
+Explanation: From the top-left corner, there are a total of 3 ways to reach the bottom-right corner:
+1. Right -> Down -> Down
+2. Down -> Down -> Right
+3. Down -> Right -> Down
 
 
+//68. MINIMUM PATH SUM       {T.C = O(N*M), S.C = (N*M)}
+
+Given a m x n grid filled with non-negative numbers, find a 
+path from top left to bottom right, which minimizes the sum 
+of all numbers along its path.
+
+Note: You can only move either down or right at any point in 
+time.
+
+class Solution {
+public:
+    int dp[205][205];
+    int solveMem(vector<vector<int>>&grid, int i, int j, int n, int m){
+        //base case
+        if(i >= n || j >= m) return INT_MAX;           //invalid(finding min)
+        if(i == n-1 && j == m-1) return grid[i][j];    //source == dest
+
+        if(dp[i][j] != -1) return dp[i][j];
+
+        int down  = solveMem(grid, i, j+1, n, m);
+        int right = solveMem(grid, i+1, j, n, m);
+
+        return dp[i][j] = grid[i][j] + min(down, right);     //add grid(curr) here only
+    }
+    int minPathSum(vector<vector<int>>& grid) {
+        int n = grid.size(), m = grid[0].size();
+        memset(dp, -1, sizeof(dp));
+        return solveMem(grid, 0, 0, n, m);
+    }
+};
+
+Example 1:
+Input: grid = [[1,3,1],[1,5,1],[4,2,1]]
+Output: 7
+
+Explanation: Because the path 1 → 3 → 1 → 1 → 1 minimizes the sum.
+Example 2:
+Input: grid = [[1,2,3],[4,5,6]]
+Output: 12
 
 
+//69. WORD BREAK           {T.C = O(N^2), S.C = O(N)}
+
+Given a string s and a dictionary of strings wordDict, return 
+true if s can be segmented into a space-separated sequence of 
+one or more dictionary words.
+
+Note that the same word in the dictionary may be reused multiple 
+times in the segmentation.
+
+class Solution {
+public:
+    int dp[305];
+    bool solveMem(string &s, unordered_set<string>&st, int i){
+        int n = s.length();
+        //base case
+        if(i >= n) return true;                  //full string traversed(valid)
+
+        if(dp[i] != -1) return dp[i];
+
+        string temp = "";                   //new breaked string present in st
+        for(int j = i; j < n; j++){         //substring from i (not 0)
+            temp += s[j];
+            if(st.count(temp)){
+                if(solveMem(s, st, j+1)) return dp[i] = true;    //check for next word
+            }
+        }
+
+        return dp[i] = false;
+    }
+    bool wordBreak(string s, vector<string>& wordDict) {
+        memset(dp, -1, sizeof(dp));
+        unordered_set<string>st(wordDict.begin(), wordDict.end());
+        return solveMem(s, st, 0);               //0 = initial index
+    }
+};
+
+Example 1:
+Input: s = "leetcode", wordDict = ["leet","code"]
+Output: true
+Explanation: Return true because "leetcode" can be segmented as "leet code".
+
+Example 2:
+Input: s = "applepenapple", wordDict = ["apple","pen"]
+Output: true
+Explanation: Return true because "applepenapple" can be segmented as "apple pen apple".
+Note that you are allowed to reuse a dictionary word.
+
+Example 3:
+Input: s = "catsandog", wordDict = ["cats","dog","sand","and","cat"]
+Output: false
 
 
+//70. LONGEST COMMON SUBSEQUENCE  {T.C = O(N^2), S.C = O(N^2)}
+
+Given two strings text1 and text2, return the length of their 
+longest common subsequence. If there is no common subsequence, 
+return 0.
+
+A subsequence of a string is a new string generated from the 
+original string with some characters (can be none) deleted 
+without changing the relative order of the remaining characters.
+
+For example, "ace" is a subsequence of "abcde".
+A common subsequence of two strings is a subsequence that is 
+common to both strings.
+
+class Solution {
+public:
+    int dp[1001][1001];
+    int solveMem(string &a, string &b, int i, int j){
+        int n = a.size(), m = b.size();
+        //base case
+        if(i >= n || j >= m) return 0;                //invalid case (no common)
+
+        if(dp[i][j] != -1) return dp[i][j];
+
+        int count = 0;
+        if(a[i] == b[j]){
+            count = 1 + solveMem(a, b, i+1, j+1);
+        }else{
+            count = 0 + max(solveMem(a, b, i+1, j), solveMem(a, b, i, j+1));
+        }
+
+        return dp[i][j] = count;
+    }
+    int longestCommonSubsequence(string text1, string text2) {
+        memset(dp, -1, sizeof(dp));
+        return solveMem(text1, text2, 0, 0);          //0 - initial indexes
+    }
+};
+
+Example 1:
+Input: text1 = "abcde", text2 = "ace" 
+Output: 3  
+Explanation: The longest common subsequence is "ace" and its length is 3.
+
+Example 2:
+Input: text1 = "abc", text2 = "abc"
+Output: 3
+Explanation: The longest common subsequence is "abc" and its length is 3.
+
+Example 3:
+Input: text1 = "abc", text2 = "def"
+Output: 0
+Explanation: There is no such common subsequence, so the result is 0.
 
 
+//71. LONGEST PALINDROMIC SUBSEQUENCE   {T.C = O(N^2), S.C = O(N^2)}           
+//LPS(s) = LCS(s, reverse(s))
 
-//extra for now
+Given a string s, find the longest palindromic subsequence's 
+length in s.
+
+A subsequence is a sequence that can be derived from another 
+sequence by deleting some or no elements without changing the 
+order of the remaining elements.
+
+class Solution {
+public:
+    int dp[1005][1005];
+    int solveMem(string &a, string &b, int i, int j){
+        int n = a.size(), m = b.size();
+        //base case
+        if(i >= n || j >= m) return 0;               //invalid (no subsequence)
+
+        if(dp[i][j] != -1) return dp[i][j];
+
+        int count = 0;
+        if(a[i] == b[j]){
+            count = 1 + solveMem(a, b, i+1, j+1);
+        }else{
+            count = 0 + max(solveMem(a, b, i+1, j), solveMem(a, b, i, j+1));
+        }
+
+        return dp[i][j] = count;
+    }
+    int longestPalindromeSubseq(string s) {
+        string rev = s;
+        reverse(rev.begin(), rev.end());
+
+        memset(dp, -1, sizeof(dp));
+        return solveMem(s, rev, 0, 0);         //0 = initial index of both
+    }
+};
+
+Example 1:
+Input: s = "bbbab"
+Output: 4
+Explanation: One possible longest palindromic subsequence is "bbbb".
+
+Example 2:
+Input: s = "cbbd"
+Output: 2
+Explanation: One possible longest palindromic subsequence is "bb".
+
+
+//72. LONGEST INCREASING SUBSEQUENCE  {T.C = O(N^2), S.C = O(N^2)}
+//LPS = LCS(s, reverse(s))
+//LIS = LCS(arr, sorted_unique(arr))
+
+Given an integer array nums, return the length of the longest 
+strictly increasing subsequence.
+
+class Solution {
+public:
+    int dp[2505][2505];
+    int solveMem(vector<int>&a, vector<int>&b, int i, int j){
+        int n = a.size(), m = b.size();
+        //base case
+        if(i >= n || j >= m) return 0;                    //invalid case
+
+        if(dp[i][j] != -1) return dp[i][j];
+
+        int count = 0;
+        if(a[i] == b[j]){
+            count = 1 + solveMem(a, b, i+1, j+1);
+        }else{
+            count = 0 + max(solveMem(a, b, i+1, j), solveMem(a, b, i, j+1));
+        }
+
+        return dp[i][j] = count;
+    }
+    int lengthOfLIS(vector<int>& nums) {
+        vector<int>v =  nums;
+
+        sort(v.begin(), v.end());
+
+        v.erase(unique(v.begin(), v.end()), v.end());    //erase duplicate and make sorted
+
+        memset(dp, -1, sizeof(dp));
+        return solveMem(nums, v, 0, 0);        //0 = initial index
+    }
+};
+
+Example 1:
+Input: nums = [10,9,2,5,3,7,101,18]
+Output: 4
+Explanation: The longest increasing subsequence is [2,3,7,101], therefore the length is 4.
+
+Example 2:
+Input: nums = [0,1,0,3,2,3]
+Output: 4
+
+Example 3:
+Input: nums = [7,7,7,7,7,7,7]
+Output: 1
+
+
+//73. HOUSE ROBBER 1           {T.C = O(N), S.C = O(N)}
+
+You are a professional robber planning to rob houses along a 
+street. Each house has a certain amount of money stashed, the
+only constraint stopping you from robbing each of them is that 
+adjacent houses have security systems connected and it will 
+automatically contact the police if two adjacent houses were 
+broken into on the same night.
+
+Given an integer array nums representing the amount of money 
+of each house, return the maximum amount of money you can rob 
+tonight without alerting the police.
+
+class Solution {
+public:
+    int dp[105];
+    int solveMem(vector<int>&nums, int i){
+        int n = nums.size();
+        //base case
+        if(i >= n) return 0;               //invalid case
+
+        if(dp[i] != -1) return dp[i];
+
+        int incl = nums[i] + solveMem(nums, i+2);    //adjacent skip
+        int excl = 0 + solveMem(nums, i+1); 
+
+        return dp[i] = max(incl, excl);
+    }
+    int rob(vector<int>& nums) {
+        memset(dp, -1, sizeof(dp));
+        return solveMem(nums, 0);                //0 = inital index
+    }
+};
+
+Example 1:
+Input: nums = [1,2,3,1]
+Output: 4
+Explanation: Rob house 1 (money = 1) and then rob house 3 (money = 3).
+Total amount you can rob = 1 + 3 = 4.
+
+Example 2:
+Input: nums = [2,7,9,3,1]
+Output: 12
+Explanation: Rob house 1 (money = 2), rob house 3 (money = 9) and rob house 5 (money = 1).
+Total amount you can rob = 2 + 9 + 1 = 12.
+
+
+//74. HOUSE ROBBER 2           {T.C = O(N^2), S.C = O(N^2)}
+
+You are a professional robber planning to rob houses along a 
+street. Each house has a certain amount of money stashed. All 
+houses at this place are arranged in a circle. That means the 
+first house is the neighbor of the last one. Meanwhile, adjacent 
+houses have a security system connected, and it will automatically 
+contact the police if two adjacent houses were broken into on 
+the same night.
+
+Given an integer array nums representing the amount of money 
+of each house, return the maximum amount of money you can rob 
+tonight without alerting the police.
+
+class Solution {
+public:
+    int dp[105];
+    int solveMem(vector<int>& nums, int i, int n){
+        //base case
+        if(i >= n) return 0;          //invalid case
+        
+        if(dp[i] != -1) return dp[i];
+
+        int incl = nums[i] + solveMem(nums, i+2, n);     //adjacent skip
+        int excl = 0 + solveMem(nums, i+1, n);
+
+        return dp[i] = max(incl, excl);
+    }
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+        //base case
+        if(n == 1) return nums[0];
+        if(n == 2) return max(nums[0], nums[1]);
+
+        memset(dp, -1, sizeof(dp));
+        int zeroToSecondLastIdx = solveMem(nums, 0, n-1);
+        
+        memset(dp, -1, sizeof(dp));                      //reset dp
+        int oneToLastIdx        = solveMem(nums, 1, n);
+
+        return max(zeroToSecondLastIdx, oneToLastIdx);
+    }
+};
+
+Example 1:
+Input: nums = [2,3,2]
+Output: 3
+Explanation: You cannot rob house 1 (money = 2) and then rob house 3 (money = 2), because they are adjacent houses.
+
+Example 2:
+Input: nums = [1,2,3,1]
+Output: 4
+Explanation: Rob house 1 (money = 1) and then rob house 3 (money = 3).
+Total amount you can rob = 1 + 3 = 4.
+
+Example 3:
+Input: nums = [1,2,3]
+Output: 3
+
+
 /*BINARY SEARCH / TWO POINTERS *****************************/
 
-// ALLOCATE MINIMUM PAGES      {T.C = O(N*LOG(SUM), S.C = O(N))}
+//75. ALLOCATE MINIMUM PAGES      {T.C = O(N*LOG(SUM), S.C = O(N))}
 
 Given an array arr[] of integers, where each element arr[i] 
 represents the number of pages in the i-th book. You also have
@@ -2639,7 +3229,7 @@ Explanation: Since there are more students than total books,
 its impossible to allocate a book to each student.
 
 
-//15. MERGE SORTED ARRAY       {T.C = O(N+M), S.C = O(1)}
+//76. MERGE SORTED ARRAY       {T.C = O(N+M), S.C = O(1)}
 
 You are given two integer arrays nums1 and nums2, sorted in 
 non-decreasing order, and two integers m and n, representing 
