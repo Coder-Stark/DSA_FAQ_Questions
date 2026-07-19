@@ -1030,7 +1030,7 @@ Output: [2,3,4,-1,4]
 
 //29. DETECT AND REMOVE LOOP IN LL   {T.C = O(N), S.C = O(1)}
 
-Given the head of a singly linked list, the task is to remove a cycle if present. A cycle exists when a node's next pointer points back to a previous node, forming a loop.
+Given the head of a singly linked list, the task is to remove a cycle if present. A cycle exists when a nodes next pointer points back to a previous node, forming a loop.
 
 Internally, a variable pos is used to denotes the position of 
 the node where the cycle starts, but it is not passed as a parameter.
